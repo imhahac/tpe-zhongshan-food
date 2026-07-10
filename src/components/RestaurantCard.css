@@ -1,0 +1,48 @@
+.row-card {
+  background-color: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  transition: border-color 0.2s ease, transform 0.1s ease;
+  cursor: pointer;
+  position: relative;
+}
+
+.row-card:hover {
+  border-color: var(--primary-color);
+}
+
+.row-card.hot-pick {
+  border-left: 4px solid var(--hot-color);
+}
+
+.row-card h3 {
+  margin: 0 0 4px 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.row-card h3 a {
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.row-card h3 a:hover {
+  color: var(--primary-color);
+}
+
+.row-card div {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.tag {
+  display: inline-block;
+  font-size: 1rem;
+  margin-right: 6px;
+  padding: 2px 0;
+}

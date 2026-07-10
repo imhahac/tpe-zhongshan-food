@@ -1,0 +1,25 @@
+.app-footer {
+  width: 100%;
+  background-color: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  padding: 10px 0;
+  font-size: 0.85rem;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  z-index: 1000;
+  color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--text-secondary);
+  text-decoration: none;
+  padding: 0 12px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.footer-link:hover {
+  color: var(--primary-color);
+}
