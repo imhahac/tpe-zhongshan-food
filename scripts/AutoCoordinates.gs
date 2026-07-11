@@ -14,6 +14,9 @@ function fetchCoordinates() {
   const restaurantColIdx = headers.indexOf("Restaurant");
   const coordinatesColIdx = headers.indexOf("Coordinates");
   const addressColIdx = headers.indexOf("Address");
+  const ratingColIdx = headers.indexOf("Rating");
+  const phoneColIdx = headers.indexOf("Phone");
+  const photoColIdx = headers.indexOf("PhotoURL");
   
   if (restaurantColIdx === -1 || coordinatesColIdx === -1) {
     Logger.log("找不到 'Restaurant' 或 'Coordinates' 欄位，請確認表頭名稱是否正確。");
@@ -65,6 +68,17 @@ function fetchCoordinates() {
           sheet.getRange(i + 1, addressColIdx + 1).setValue(result.address);
         }
         
+        // --- 進階商業資訊寫入 (Places API) ---
+        if (result.rating && ratingColIdx !== -1 && (!values[i][ratingColIdx] || values[i][ratingColIdx].toString().trim() === "")) {
+          sheet.getRange(i + 1, ratingColIdx + 1).setValue(result.rating);
+        }
+        if (result.phone && phoneColIdx !== -1 && (!values[i][phoneColIdx] || values[i][phoneColIdx].toString().trim() === "")) {
+          sheet.getRange(i + 1, phoneColIdx + 1).setValue(result.phone);
+        }
+        if (result.photoUrl && photoColIdx !== -1 && (!values[i][photoColIdx] || values[i][photoColIdx].toString().trim() === "")) {
+          sheet.getRange(i + 1, photoColIdx + 1).setValue(result.photoUrl);
+        }
+        
         const msg = `✅ 成功更新 [${restaurantName}]: ${result.lat}, ${result.lon}`;
         Logger.log(msg);
         executionLogs.push(msg + `\n   地址: ${result.address}`);
@@ -107,7 +121,18 @@ function fetchCoordinates() {
 function getCoordinates(restaurantName) {
   const scriptProperties = PropertiesService.getScriptProperties();
   const apiKey = scriptProperties.getProperty('OSM_API_KEY');
+  const placesApiKey = scriptProperties.getProperty('GOOGLE_PLACES_API_KEY');
   
+  // Track 0: 如果有設定 Google Places API Key，取得最完整的資訊
+  if (placesApiKey) {
+    Logger.log(`[Track 0] 嘗試使用 Google Places API 搜尋: ${restaurantName}`);
+    const placesResult = getFromGooglePlaces(restaurantName, placesApiKey);
+    if (!placesResult.error) {
+      return placesResult;
+    }
+    Logger.log(`[Track 0 失敗] ${placesResult.error}，將切換至 Track 1 備援...`);
+  }
+
   // Track 1: 如果有設定 API Key，優先使用 LocationIQ (OSM)
   if (apiKey) {
     Logger.log(`[Track 1] 嘗試使用 LocationIQ API (OSM) 搜尋: ${restaurantName}`);
@@ -123,6 +148,52 @@ function getCoordinates(restaurantName) {
   // Track 2: 備援機制，使用 Apps Script 內建的 Google Geocoder (完全免費、免 Key、幾乎不會 429)
   Logger.log(`[Track 2] 嘗試使用 Google Native Geocoder 搜尋: ${restaurantName}`);
   return getFromGoogleGeocoder(restaurantName);
+}
+
+function getFromGooglePlaces(restaurantName, apiKey) {
+  try {
+    const query = encodeURIComponent(`${restaurantName} 中山區 台北市`);
+    const searchUrl = `https://maps.googleapis.com/maps/api/place/textsearch/json?query=${query}&key=${apiKey}&language=zh-TW`;
+    let searchRes = UrlFetchApp.fetch(searchUrl, { method: "GET", muteHttpExceptions: true });
+    
+    if (searchRes.getResponseCode() !== 200) {
+      return { error: `Places Search HTTP ${searchRes.getResponseCode()}` };
+    }
+    
+    let searchData = JSON.parse(searchRes.getContentText());
+    if (!searchData.results || searchData.results.length === 0) {
+      return { error: "Places API 找不到該地點" };
+    }
+    
+    const place = searchData.results[0];
+    const placeId = place.place_id;
+    let result = {
+      lat: place.geometry.location.lat.toFixed(6),
+      lon: place.geometry.location.lng.toFixed(6),
+      address: cleanAddress(place.formatted_address),
+      rating: place.rating || "",
+      phone: "",
+      photoUrl: ""
+    };
+
+    if (place.photos && place.photos.length > 0) {
+      const photoRef = place.photos[0].photo_reference;
+      result.photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${apiKey}`;
+    }
+
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number&key=${apiKey}&language=zh-TW`;
+    let detailsRes = UrlFetchApp.fetch(detailsUrl, { method: "GET", muteHttpExceptions: true });
+    if (detailsRes.getResponseCode() === 200) {
+      let detailsData = JSON.parse(detailsRes.getContentText());
+      if (detailsData.result && detailsData.result.formatted_phone_number) {
+        result.phone = detailsData.result.formatted_phone_number;
+      }
+    }
+
+    return result;
+  } catch (e) {
+    return { error: `Places API 異常: ${e.message}` };
+  }
 }
 
 function getFromLocationIQ(restaurantName, apiKey) {

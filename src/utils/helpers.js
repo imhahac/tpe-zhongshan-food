@@ -1,8 +1,8 @@
 export const defaultCoordination = [25.0628, 121.5193]; // Minquan West Rd Station
 export const NEAR = 0.2; // km
 
-export function inRange(coord1, coord2, range = 0.5) {
-  if (!coord1 || !coord2) return false;
+export function getDistance(coord1, coord2) {
+  if (!coord1 || !coord2) return Infinity;
   const toRad = (value) => (value * Math.PI) / 180;
   const R = 6371; 
   const dLat = toRad(coord2[0] - coord1[0]);
@@ -13,7 +13,12 @@ export function inRange(coord1, coord2, range = 0.5) {
     Math.sin(dLon / 2) * Math.sin(dLon / 2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
   const distance = R * c; 
-  return distance <= range;
+  return distance;
+}
+
+export function inRange(coord1, coord2, range = 0.5) {
+  const dist = getDistance(coord1, coord2);
+  return dist <= range;
 }
 
 export function getPosition(coordinates) {

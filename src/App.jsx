@@ -20,6 +20,8 @@ export default function App() {
   const [activeMarker, setActiveMarker] = useState(null);
   const [activeRestaurant, setActiveRestaurant] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [picking, setPicking] = useState(false);
+  const [pickingName, setPickingName] = useState('');
 
   const { genres, locations } = useMemo(() => {
     const g = new Set();
@@ -56,7 +58,7 @@ export default function App() {
   };
 
   const hasTag = useCallback((row, tag) => {
-    return row[tag] === "O";
+    return row[tag] === "O" || row[tag] === "o";
   }, []);
 
   const filteredData = useMemo(() => {
@@ -87,6 +89,27 @@ export default function App() {
     const pos = getPosition(row.Coordinates);
     setActiveMarker(pos);
     setActiveRestaurant(row.Restaurant);
+  };
+
+  const pickRandom = () => {
+    if (filteredData.length === 0) return;
+    setPicking(true);
+    let count = 0;
+    const maxCount = 15;
+    const interval = setInterval(() => {
+      const randIndex = Math.floor(Math.random() * filteredData.length);
+      setPickingName(filteredData[randIndex].Restaurant);
+      count++;
+      if (count >= maxCount) {
+        clearInterval(interval);
+        const finalChoice = filteredData[randIndex];
+        setPicking(false);
+        handleCardClick(finalChoice);
+        setTimeout(() => {
+          document.getElementById(`card-${finalChoice.Restaurant}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+      }
+    }, 100);
   };
 
   const handleScroll = (e) => {
@@ -134,17 +157,31 @@ export default function App() {
             selectedTags={selectedTags} toggleTag={toggleTag} setSelectedTags={setSelectedTags}
           />
 
+          <div style={{ textAlign: 'center', marginBottom: '10px' }}>
+            <button 
+              className="filter-btn active-filter" 
+              style={{ width: '90%', fontSize: '1.1rem', padding: '10px', animation: picking ? 'pulse 0.5s infinite' : 'none' }}
+              onClick={pickRandom} 
+              disabled={picking || filteredData.length === 0}
+            >
+              {picking 
+                ? `🎲 ${pickingName}` 
+                : (lang === 'en' ? '🎲 Pick for Me' : '🎲 今天吃什麼？')}
+            </button>
+          </div>
+
           <div className="list-container">
             {filteredData.length === 0 ? (
               <div className="empty-state">{lang === 'en' ? 'No restaurants match the filters' : '無符合條件的餐廳'}</div>
             ) : (
-              filteredData.map((row) => (
+              filteredData.map((row, idx) => (
                 <RestaurantCard 
-                  key={row.Restaurant} 
+                  key={`${row.Restaurant}-${idx}`} 
                   row={row} 
                   lang={lang} 
                   handleCardClick={handleCardClick} 
                   hasTag={hasTag} 
+                  currentCoord={currentCoord}
                 />
               ))
             )}

@@ -31,8 +31,9 @@
 1. 進入 **Settings -> Secrets and variables -> Actions**。
 2. 切換到 **Variables** 頁籤，點擊 **New repository variable**。
 3. 新增變數 `SHEET_ID`：填入您的 Google Sheets ID（位於網址列 `/d/` 之後的亂碼）。
-4. 新增變數 `GID`：填入對應的工作表 GID (通常是網址最後面的 `gid=0` 或一串數字)。
-5. 新增變數 `VITE_BACKEND_URL`（選填）：如果您有部署專屬的後端伺服器（處理點擊率與熱門統計），請填入您的後端完整網址（例如 `https://your-backend.com`）。若不填寫將會嘗試回退至舊版預設網址。
+4. 新增變數 `GID`：填入餐廳名單工作表的 GID (通常是網址最後面的 `gid=0` 或一串數字)。
+5. 新增變數 `MAPPING_GID`（選填）：如果您建立了「動態選項字典」分頁（用來自動對應下拉選單選項名稱），請填入該分頁的 GID。
+6. 新增變數 `VITE_BACKEND_URL`（選填）：如果您有部署專屬的後端伺服器（處理點擊率與熱門統計），請填入您的後端完整網址（例如 `https://your-backend.com`）。若不填寫將會嘗試回退至舊版預設網址。
 
 ### 第三步：觸發更新
 只要完成上述設定，專案就會透過 `.github/workflows/deploy.yml` 自動運作：
@@ -50,8 +51,8 @@
 | --- | --- | --- |
 | **`Restaurant`** | 餐廳名稱（將直接顯示於畫面上） | `晴光意麵` |
 | **`Address`** | 餐廳地址。若留空，排程腳本會自動查詢並填上 | `台北市中山區農安街...` |
-| **`Location`** | 餐廳區域。必須填入系統定義的英文 Key（例如：`Qingguang` = 晴光市場, `MinquanWest` = 民權西路站, `ZhongshanElementary` = 中山國小站, `Zhongyuan` = 中原街, `Jilin` = 吉林路） | `Qingguang` |
-| **`Genre`** | 餐廳類別。必須填入系統定義的英文 Key（例如：`Bento`, `Japanese`, `Noodles`, `Dessert` 等） | `Noodles` |
+| **`Location`** | 餐廳區域。必須填寫與「字典分頁」對應的 Key 值，或是直接填寫中文。若有設定 `MAPPING_GID`，下拉選單會自動對應翻譯；否則會直接顯示您填入的內容。 | `Qingguang` |
+| **`Genre`** | 餐廳類別。填寫規範同 `Location`，支援全動態擴充。 | `Bento` |
 | **`Price`** | 價格區間，填入數字。畫面上會轉化為金幣數量 🪙 | `2` |
 | **`Coordinates`** | Google Maps 經緯度，以逗號分隔。如果留空則會預設指到民權西路站 | `25.0645, 121.5234` |
 | **`OnePerson`** | (標籤) 是否適合一個人吃。是請填大寫 `O`，否則留白 | `O` |
@@ -61,7 +62,7 @@
 | **`SlowEat`** | (標籤) 是否適合慢慢吃。是請填大寫 `O`，否則留白 | |
 
 > **⚠️ 注意事項：** 
-> 1. `Location` 與 `Genre` 支援的完整英文 Key 列表請參考原始碼 `src/data/enum.js` 中的設定。
+> 1. 本專案支援 **「全自動化動態字典」 (No-Code Mappings)**！只要您在 Google Sheets 建立一個字典分頁（欄位依序為 `Location`, `locationMapping`, `Genre`, `genreMapping`），並將其 GID 填入 GitHub Variables `MAPPING_GID` 中，系統打包時就會自動產生下拉選單，完全無需修改前端程式碼！
 > 2. `HotPick` (熱門推薦) 標籤是由點擊率統計自動產生的，不需要（也不能）在表單中手動填寫。
 
 ---

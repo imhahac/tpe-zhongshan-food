@@ -1,3 +1,5 @@
+import dynamicMapping from './mapping.json';
+
 export const locationMapping = {
     "All": "全部",
     "Random": "隨機",
@@ -8,7 +10,8 @@ export const locationMapping = {
     "Jilin": "吉林路",
     "Zhongyuan St.": "中原街",
     "Jilin Rd.": "吉林路",
-    "near": "附近"
+    "near": "附近",
+    ...(dynamicMapping.locationMapping || {})
 };
 
 export const locationMapping_en = {
@@ -49,7 +52,8 @@ export const genreMapping = {
     "Korean":"韓式料理",
     "HongKong":"港式料理",
     "Exotic":"異國料理",
-    "French":"法式料理"
+    "French":"法式料理",
+    ...(dynamicMapping.genreMapping || {})
 }
 
 export const genreMapping_en = {
