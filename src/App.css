@@ -1,21 +1,43 @@
-.content-wrapper {
-  margin-top: var(--header-height);
-  display: flex;
-  flex-direction: row;
-  height: calc(100vh - var(--header-height));
-  align-items: stretch;
+.app-container {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: var(--bg-color);
 }
 
-.main-content {
-  flex: 1 1 400px;
+.map-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* Ensure leaflet container takes full height/width */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+}
+
+.sidebar-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 420px;
+  background-color: var(--surface-color);
+  border-right: 1px solid var(--border-color);
+  z-index: 10;
   display: flex;
   flex-direction: column;
-  padding: 32px;
-  box-sizing: border-box;
+}
+
+.sidebar-scrollable {
+  flex: 1;
   overflow-y: auto;
-  min-width: 320px;
-  background-color: var(--bg-color);
-  border-right: 1px solid var(--border-color);
+  padding: 24px;
 }
 
 .list-container {
@@ -39,20 +61,28 @@
 }
 
 @media (max-width: 900px) {
-  .content-wrapper {
-    flex-direction: column;
-    height: auto;
-  }
-  .main-content {
-    padding: 24px 20px;
-    height: auto;
-    border-right: none;
-    border-bottom: 1px solid var(--border-color);
+  .sidebar-layer {
+    width: 360px;
   }
 }
 
 @media (max-width: 600px) {
-  .main-content {
-    padding: 20px 16px;
+  .app-container {
+    display: flex;
+    flex-direction: column;
+  }
+  .map-layer {
+    position: relative;
+    height: 40vh; /* Map on top in mobile */
+    border-bottom: 1px solid var(--border-color);
+  }
+  .sidebar-layer {
+    position: relative;
+    width: 100%;
+    height: 60vh; /* List on bottom */
+    border-right: none;
+  }
+  .sidebar-scrollable {
+    padding: 16px;
   }
 }

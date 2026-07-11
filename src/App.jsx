@@ -20,7 +20,6 @@ export default function App() {
   const [activeMarker, setActiveMarker] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
-  // Available genres and locations from data
   const { genres, locations } = useMemo(() => {
     const g = new Set();
     const l = new Set();
@@ -41,20 +40,16 @@ export default function App() {
   }, [genre, location]);
 
   useEffect(() => {
-    // Geolocation
     const geoId = navigator.geolocation.watchPosition((pos) => {
       setCurrentCoord([pos.coords.latitude, pos.coords.longitude]);
     }, err => console.warn(err), { enableHighAccuracy: true });
-
     return () => navigator.geolocation.clearWatch(geoId);
   }, []);
 
   const toggleLang = () => setLang(l => l === 'en' ? 'zh' : 'en');
   
   const toggleTag = (tag) => {
-    // "HotPick" feature was removed as it relied on a backend that no longer exists.
     if (tag === "HotPick") return; 
-    
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
@@ -85,7 +80,6 @@ export default function App() {
       results = results.filter(r => selectedTags.every(t => hasTag(r, t)));
     }
 
-    // Shuffle
     results.sort(() => Math.random() - 0.5);
     return results;
   }, [genre, location, currentCoord, selectedTags, hasTag]);
@@ -100,7 +94,7 @@ export default function App() {
   };
 
   const scrollToTop = () => {
-    document.querySelector('.main-content')?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.querySelector('.sidebar-scrollable')?.scrollTo({ top: 0, behavior: 'smooth' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -115,11 +109,22 @@ export default function App() {
   }, []);
 
   return (
-    <>
-      <Header lang={lang} toggleLang={toggleLang} />
+    <div className="app-container">
+      <div className="map-layer">
+        <Map 
+          currentCoord={currentCoord} 
+          activeMarker={activeMarker}
+          markers={filteredData.map(r => ({
+            position: getPosition(r.Coordinates),
+            name: r.Restaurant
+          }))} 
+        />
+      </div>
 
-      <div className="content-wrapper">
-        <div className="main-content" onScroll={handleScroll}>
+      <div className="sidebar-layer">
+        <Header lang={lang} toggleLang={toggleLang} />
+        
+        <div className="sidebar-scrollable" onScroll={handleScroll}>
           <Filters 
             lang={lang} 
             genre={genre} setGenre={setGenre}
@@ -145,24 +150,14 @@ export default function App() {
           </div>
           
           <div className="note-text">
-            {lang === 'en' ? 'Note: Map coordinates may be inaccurate. Click the restaurant name to view Google Maps.' : '註：地圖位置不一定準確，詳細內容請點擊下方卡片餐廳名稱連入 Google Maps 查看'}
+            {lang === 'en' ? 'Note: Map coordinates may be inaccurate. Click the restaurant name to view Google Maps.' : '註：地圖位置不一定準確，詳細內容請點擊下方卡片連入 Google Maps 查看'}
           </div>
         </div>
 
-        <div className="map-container">
-          <Map 
-            currentCoord={currentCoord} 
-            activeMarker={activeMarker}
-            markers={filteredData.map(r => ({
-              position: getPosition(r.Coordinates),
-              name: r.Restaurant
-            }))} 
-          />
-        </div>
+        <Footer lang={lang} />
       </div>
 
-      <Footer lang={lang} />
       <BackToTop show={showBackToTop} lang={lang} scrollToTop={scrollToTop} />
-    </>
+    </div>
   );
 }

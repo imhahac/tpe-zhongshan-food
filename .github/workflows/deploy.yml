@@ -43,6 +43,7 @@ jobs:
         env:
           SHEET_ID: ${{ vars.SHEET_ID || secrets.SHEET_ID }}
           GID: ${{ vars.GID || secrets.GID }}
+          VITE_SHEET_ID: ${{ vars.SHEET_ID || secrets.SHEET_ID }}
           VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL || secrets.VITE_BACKEND_URL }}
 
       - name: Setup Pages

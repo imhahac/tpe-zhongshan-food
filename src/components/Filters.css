@@ -49,7 +49,7 @@
   color: var(--text-secondary);
   padding: 6px 14px;
   font-size: 0.85rem;
-  border-radius: 20px; /* Slight pill shape for tags, standard for filters */
+  border-radius: var(--radius-sm); 
   cursor: pointer;
   transition: all 0.15s ease;
   user-select: none;
