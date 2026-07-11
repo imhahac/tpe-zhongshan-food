@@ -14,35 +14,33 @@
 }
 
 .header-icon {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
+  margin-right: 12px;
 }
 
 .title-div {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  margin-left: 12px;
-  letter-spacing: -0.025em;
-  color: var(--text-primary);
+  letter-spacing: -0.02em;
   flex-grow: 1;
 }
 
 .langToggle {
-  background-color: transparent;
+  background: transparent;
   border: 1px solid var(--border-color);
-  padding: 6px 12px;
-  cursor: pointer;
-  color: var(--text-secondary);
+  color: var(--text-primary);
+  padding: 4px 12px;
   font-size: 0.875rem;
   font-weight: 500;
+  cursor: pointer;
   border-radius: var(--radius-sm);
   transition: all 0.2s ease;
 }
 
 .langToggle:hover {
+  border-color: var(--primary-color);
   background-color: var(--bg-color);
-  color: var(--text-primary);
-  border-color: var(--border-hover);
 }
 
 @media (max-width: 600px) {
@@ -50,6 +48,6 @@
     padding: 0 16px;
   }
   .title-div {
-    font-size: 1.1rem;
+    font-size: 1rem;
   }
 }

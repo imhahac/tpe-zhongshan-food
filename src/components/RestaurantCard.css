@@ -2,11 +2,11 @@
   background-color: var(--surface-color);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-md);
-  padding: 16px;
+  padding: 16px 20px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: border-color 0.2s ease, transform 0.1s ease;
+  gap: 6px;
+  transition: border-color 0.15s ease;
   cursor: pointer;
   position: relative;
 }
@@ -15,34 +15,33 @@
   border-color: var(--primary-color);
 }
 
-.row-card.hot-pick {
-  border-left: 4px solid var(--hot-color);
-}
-
 .row-card h3 {
-  margin: 0 0 4px 0;
-  font-size: 1.125rem;
-  font-weight: 600;
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  font-weight: 500;
   letter-spacing: -0.01em;
+  color: var(--text-primary);
 }
 
 .row-card h3 a {
   text-decoration: none;
-  color: var(--text-primary);
+  color: inherit;
 }
 
 .row-card h3 a:hover {
-  color: var(--primary-color);
+  text-decoration: underline;
 }
 
 .row-card div {
   font-size: 0.9rem;
   color: var(--text-secondary);
+  display: flex;
+  align-items: center;
 }
 
 .tag {
   display: inline-block;
   font-size: 1rem;
-  margin-right: 6px;
-  padding: 2px 0;
+  margin-right: 8px;
+  line-height: 1;
 }

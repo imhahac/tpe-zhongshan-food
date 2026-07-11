@@ -1,24 +1,5 @@
-export const BACKEND_BASE_URL = import.meta.env.VITE_BACKEND_URL || "https://ntufood-backend.onrender.com";
 export const defaultCoordination = [25.0628, 121.5193]; // Minquan West Rd Station
 export const NEAR = 0.2; // km
-
-export function apiFetch(endpoint, bodyObj, method="POST") {
-  const options = {
-    method: method,
-    headers: {
-      "Content-Type": "application/json"
-    }
-  };
-
-  if (method !== 'GET' && method !== 'HEAD') {
-    options.body = JSON.stringify(bodyObj);
-  }
-
-  return fetch(`${BACKEND_BASE_URL}${endpoint}`, options).then(res => {
-    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-    return res;
-  }).catch(err => console.warn("Fetch Error:", err));
-}
 
 export function inRange(coord1, coord2, range = 0.5) {
   if (!coord1 || !coord2) return false;

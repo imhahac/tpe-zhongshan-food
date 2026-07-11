@@ -6,13 +6,13 @@ import {
 } from '../data/enum.js';
 import { getPosition } from '../utils/helpers.js';
 
-export default function RestaurantCard({ row, isHotPick, lang, handleCardClick, hasTag }) {
+export default function RestaurantCard({ row, lang, handleCardClick, hasTag }) {
   const pos = getPosition(row.Coordinates);
   const encodedName = encodeURIComponent(row.Restaurant);
   const gMapsLink = `https://www.google.com/maps/search/${encodedName}/@${pos[0]},${pos[1]},17z`;
 
   return (
-    <div className={`row-card ${isHotPick ? 'hot-pick' : ''}`} onClick={() => handleCardClick(row)}>
+    <div className="row-card" onClick={() => handleCardClick(row)}>
       <h3>
         <a href={gMapsLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
           {row.Restaurant}

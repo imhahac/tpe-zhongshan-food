@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import './App.css';
 import Header from './components/Header';
 import Filters from './components/Filters';
@@ -9,18 +9,16 @@ import Map from './components/Map';
 
 import rawData from './data/data.json';
 import { aliasing } from './data/aliasing.js';
-import { apiFetch, inRange, getPosition, NEAR, BACKEND_BASE_URL } from './utils/helpers.js';
+import { inRange, getPosition, NEAR } from './utils/helpers.js';
 
 export default function App() {
   const [lang, setLang] = useState(localStorage.getItem('lang') || 'zh');
-  const [hotPicks, setHotPicks] = useState({});
   const [genre, setGenre] = useState(localStorage.getItem('genre') || 'All');
   const [location, setLocation] = useState(localStorage.getItem('location') || 'All');
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentCoord, setCurrentCoord] = useState(null);
   const [activeMarker, setActiveMarker] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const viewFired = useRef(false);
 
   // Available genres and locations from data
   const { genres, locations } = useMemo(() => {
@@ -40,28 +38,9 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('genre', genre);
     localStorage.setItem('location', location);
-    apiFetch("/select", { type: genre, location: location });
   }, [genre, location]);
 
   useEffect(() => {
-    if (!viewFired.current) {
-      apiFetch("/view", { time: Math.floor(Date.now() / 1000) });
-      viewFired.current = true;
-    }
-    fetch(`${BACKEND_BASE_URL}/hot`)
-      .then(res => {
-        if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
-        return res.json();
-      })
-      .then(data => {
-        const hp = {};
-        for (let r of data) {
-          if (r.restaurant && r.percentage) hp[r.restaurant] = r.percentage;
-        }
-        setHotPicks(hp);
-      })
-      .catch(err => console.warn("Hot picks error", err));
-
     // Geolocation
     const geoId = navigator.geolocation.watchPosition((pos) => {
       setCurrentCoord([pos.coords.latitude, pos.coords.longitude]);
@@ -73,15 +52,17 @@ export default function App() {
   const toggleLang = () => setLang(l => l === 'en' ? 'zh' : 'en');
   
   const toggleTag = (tag) => {
+    // "HotPick" feature was removed as it relied on a backend that no longer exists.
+    if (tag === "HotPick") return; 
+    
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
 
   const hasTag = useCallback((row, tag) => {
-    if (tag === "HotPick") return row.Restaurant && hotPicks[row.Restaurant];
     return row[tag] === "O";
-  }, [hotPicks]);
+  }, []);
 
   const filteredData = useMemo(() => {
     let results = [];
@@ -112,7 +93,6 @@ export default function App() {
   const handleCardClick = (row) => {
     const pos = getPosition(row.Coordinates);
     setActiveMarker(pos);
-    apiFetch("/click", { restaurant_name: row.Restaurant, order: 1 });
   };
 
   const handleScroll = (e) => {
@@ -150,13 +130,12 @@ export default function App() {
 
           <div className="list-container">
             {filteredData.length === 0 ? (
-              <div>{lang === 'en' ? 'No restaurants match the filters' : '無符合條件的餐廳'}</div>
+              <div className="empty-state">{lang === 'en' ? 'No restaurants match the filters' : '無符合條件的餐廳'}</div>
             ) : (
               filteredData.map((row, idx) => (
                 <RestaurantCard 
                   key={idx} 
                   row={row} 
-                  isHotPick={hotPicks[row.Restaurant]} 
                   lang={lang} 
                   handleCardClick={handleCardClick} 
                   hasTag={hasTag} 
@@ -165,7 +144,7 @@ export default function App() {
             )}
           </div>
           
-          <div style={{fontSize:'0.9em', color:'#888', marginBottom:'12px'}}>
+          <div className="note-text">
             {lang === 'en' ? 'Note: Map coordinates may be inaccurate. Click the restaurant name to view Google Maps.' : '註：地圖位置不一定準確，詳細內容請點擊下方卡片餐廳名稱連入 Google Maps 查看'}
           </div>
         </div>
