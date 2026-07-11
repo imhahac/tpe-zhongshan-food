@@ -42,8 +42,9 @@ function fetchCoordinates() {
     const coordinates = values[i][coordinatesColIdx];
     const address = addressColIdx !== -1 ? values[i][addressColIdx] : "";
     
-    // 盲區修正 2：防呆，若使用者不小心在座標欄位打了一個空白鍵 " "，原本的 !coordinates 會失效。
-    const isCoordinatesEmpty = !coordinates || coordinates.toString().trim() === "";
+    // 盲區修正 2：防呆，若座標欄位空白，或之前寫入了錯誤訊息 (⚠️ 開頭)，都視為需要重新抓取。
+    const coordStr = coordinates ? coordinates.toString().trim() : "";
+    const isCoordinatesEmpty = coordStr === "" || coordStr.startsWith("⚠️");
     
     // 如果有餐廳名稱，且座標完全空白才執行
     if (restaurantName && isCoordinatesEmpty) {
