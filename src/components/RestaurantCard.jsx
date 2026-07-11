@@ -17,9 +17,6 @@ export default function RestaurantCard({ row, lang, handleCardClick, hasTag, cur
 
   return (
     <div id={`card-${row.Restaurant}`} className="row-card" onClick={() => handleCardClick(row)}>
-      {row.PhotoURL && (
-        <img src={row.PhotoURL} alt={row.Restaurant} className="restaurant-photo" />
-      )}
       <h3>
         <a href={gMapsLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
           {row.Restaurant}
@@ -47,6 +44,12 @@ export default function RestaurantCard({ row, lang, handleCardClick, hasTag, cur
       </div>
       {row.Phone && (
         <div className="card-phone">📞 {row.Phone}</div>
+      )}
+      {row.OpeningHours && (
+        <details className="card-hours">
+          <summary>{lang === 'en' ? '🕒 Opening Hours' : '🕒 營業時間'}</summary>
+          <pre>{row.OpeningHours}</pre>
+        </details>
       )}
       <div>
         {Object.keys(filterMapping).map(tag => {

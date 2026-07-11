@@ -16,7 +16,7 @@ function fetchCoordinates() {
   const addressColIdx = headers.indexOf("Address");
   const ratingColIdx = headers.indexOf("Rating");
   const phoneColIdx = headers.indexOf("Phone");
-  const photoColIdx = headers.indexOf("PhotoURL");
+  const openingHoursColIdx = headers.indexOf("OpeningHours");
   
   if (restaurantColIdx === -1 || coordinatesColIdx === -1) {
     Logger.log("找不到 'Restaurant' 或 'Coordinates' 欄位，請確認表頭名稱是否正確。");
@@ -75,8 +75,8 @@ function fetchCoordinates() {
         if (result.phone && phoneColIdx !== -1 && (!values[i][phoneColIdx] || values[i][phoneColIdx].toString().trim() === "")) {
           sheet.getRange(i + 1, phoneColIdx + 1).setValue(result.phone);
         }
-        if (result.photoUrl && photoColIdx !== -1 && (!values[i][photoColIdx] || values[i][photoColIdx].toString().trim() === "")) {
-          sheet.getRange(i + 1, photoColIdx + 1).setValue(result.photoUrl);
+        if (result.openingHours && openingHoursColIdx !== -1 && (!values[i][openingHoursColIdx] || values[i][openingHoursColIdx].toString().trim() === "")) {
+          sheet.getRange(i + 1, openingHoursColIdx + 1).setValue(result.openingHours);
         }
         
         const msg = `✅ 成功更新 [${restaurantName}]: ${result.lat}, ${result.lon}`;
@@ -173,20 +173,20 @@ function getFromGooglePlaces(restaurantName, apiKey) {
       address: cleanAddress(place.formatted_address),
       rating: place.rating || "",
       phone: "",
-      photoUrl: ""
+      openingHours: ""
     };
 
-    if (place.photos && place.photos.length > 0) {
-      const photoRef = place.photos[0].photo_reference;
-      result.photoUrl = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=400&photoreference=${photoRef}&key=${apiKey}`;
-    }
-
-    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number&key=${apiKey}&language=zh-TW`;
+    const detailsUrl = `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&fields=formatted_phone_number,opening_hours&key=${apiKey}&language=zh-TW`;
     let detailsRes = UrlFetchApp.fetch(detailsUrl, { method: "GET", muteHttpExceptions: true });
     if (detailsRes.getResponseCode() === 200) {
       let detailsData = JSON.parse(detailsRes.getContentText());
-      if (detailsData.result && detailsData.result.formatted_phone_number) {
-        result.phone = detailsData.result.formatted_phone_number;
+      if (detailsData.result) {
+        if (detailsData.result.formatted_phone_number) {
+          result.phone = detailsData.result.formatted_phone_number;
+        }
+        if (detailsData.result.opening_hours && detailsData.result.opening_hours.weekday_text) {
+          result.openingHours = detailsData.result.opening_hours.weekday_text.join('\n');
+        }
       }
     }
 

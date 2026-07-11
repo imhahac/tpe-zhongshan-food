@@ -65,7 +65,7 @@
 | **`SlowEat`** | (標籤) 是否適合慢慢吃。是請填大寫 `O`，否則留白 | |
 | **`Rating`** | (進階) Google 評分。若掛載 Places API，排程會自動抓取 | `4.5` |
 | **`Phone`** | (進階) 餐廳電話。若掛載 Places API，排程會自動抓取 | `02-12345678` |
-| **`PhotoURL`** | (進階) 照片網址。若掛載 Places API，排程會自動抓取 | `https://...` |
+| **`OpeningHours`** | (進階) 營業時間。若掛載 Places API，排程會自動抓取並顯示為折疊面板 | `星期一: 11:00...` |
 
 > **⚠️ 注意事項：** 
 > 1. 本專案支援 **「全自動化動態字典」 (No-Code Mappings)**！只要您在 Google Sheets 建立一個字典分頁（欄位依序為 `Location`, `locationMapping`, `Genre`, `genreMapping`），並將其 GID 填入 GitHub Variables `MAPPING_GID` 中，系統打包時就會自動產生下拉選單，完全無需修改前端程式碼！
