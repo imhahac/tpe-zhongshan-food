@@ -49,7 +49,6 @@ export default function App() {
   const toggleLang = () => setLang(l => l === 'en' ? 'zh' : 'en');
   
   const toggleTag = (tag) => {
-    if (tag === "HotPick") return; 
     setSelectedTags(prev => 
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
@@ -80,7 +79,6 @@ export default function App() {
       results = results.filter(r => selectedTags.every(t => hasTag(r, t)));
     }
 
-    results.sort(() => Math.random() - 0.5);
     return results;
   }, [genre, location, currentCoord, selectedTags, hasTag]);
 
@@ -137,9 +135,9 @@ export default function App() {
             {filteredData.length === 0 ? (
               <div className="empty-state">{lang === 'en' ? 'No restaurants match the filters' : '無符合條件的餐廳'}</div>
             ) : (
-              filteredData.map((row, idx) => (
+              filteredData.map((row) => (
                 <RestaurantCard 
-                  key={idx} 
+                  key={row.Restaurant} 
                   row={row} 
                   lang={lang} 
                   handleCardClick={handleCardClick} 

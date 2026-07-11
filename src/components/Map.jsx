@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import './Map.css';
+import { defaultCoordination } from '../utils/helpers.js';
 
 // Fix Leaflet icon issue in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -10,8 +11,6 @@ L.Icon.Default.mergeOptions({
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
-
-const defaultCoord = [25.01744, 121.537372];
 
 function MapController({ center, zoom }) {
   const map = useMap();
@@ -24,7 +23,7 @@ function MapController({ center, zoom }) {
 }
 
 export default function Map({ currentCoord, markers, activeMarker }) {
-  const mapCenter = activeMarker || currentCoord || defaultCoord;
+  const mapCenter = activeMarker || currentCoord || defaultCoordination;
 
   const userIcon = new L.Icon({
     iconUrl: import.meta.env.BASE_URL + 'icon.png',
