@@ -48,10 +48,12 @@ function fetchCoordinates() {
     
     // 如果有餐廳名稱，且座標完全空白才執行
     if (restaurantName && isCoordinatesEmpty) {
-      Logger.log(`正在搜尋: ${restaurantName}`);
+      // 盲區修正 4：如果使用者已經手動填寫了詳細地址，優先使用「地址」來查詢精確座標，否則才用店名
+      const searchQuery = (address && address.toString().trim() !== "") ? address.toString().trim() : restaurantName;
+      Logger.log(`正在搜尋: ${searchQuery}`);
       processedCount++;
       
-      const result = getCoordinates(restaurantName);
+      const result = getCoordinates(searchQuery);
       
       if (result && result.lat) {
         // 寫入座標
