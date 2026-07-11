@@ -66,9 +66,11 @@
 
 ---
 
-## 🤖 自動化：填寫餐廳名稱，自動抓取座標
+## 🤖 自動化：雙軌備援機制抓取座標與地址
 
-為了減輕手動查詢座標的負擔，本專案提供了一支基於 OpenStreetMap API 的 **Google Apps Script**。您只需填寫餐廳名稱，系統便會在背景自動補齊座標！
+為了減輕手動查詢座標的負擔，本專案提供了一支內建「雙軌備援系統」的 **Google Apps Script**。您只需填寫餐廳名稱，系統便會在背景自動補齊經緯度與官方地址！
+- **Track 1 (主線路)**：LocationIQ (基於 OpenStreetMap 的專業地圖 API，需免費申請 Key)。
+- **Track 2 (備援線路)**：Google Apps Script 內建地圖服務 (免 Key，高可用性)。若 Track 1 失敗或未設定，系統會自動無縫切換至此備援機制。
 
 ### 步驟 1：匯入腳本
 1. 開啟您的 Google Sheets 表單。
@@ -77,7 +79,15 @@
 4. 打開本專案原始碼中的 [`scripts/AutoCoordinates.gs`](file:///Users/hahachou/git_repo/github/tpe-zhongshan-food/scripts/AutoCoordinates.gs) 檔案，將裡面的所有內容**複製並貼上**到腳本編輯器中。
 5. 點擊上方的 **「儲存」** 圖示（或按 `Ctrl+S` / `Cmd+S`）。
 
-### 步驟 2：設定自動排程 (Trigger)
+### 步驟 2：申請並設定 LocationIQ API Key (建議)
+雖然系統內建 Google 備援機制，但為了獲取最準確的開源圖資，建議免費申請 LocationIQ API Key：
+1. 前往 [LocationIQ 官網](https://locationiq.com/) 註冊免費帳號，並在後台複製您的 **Access Token**。
+2. 回到 Apps Script 編輯器，點擊左側面板的 **「專案設定」 (齒輪圖示 ⚙️)**。
+3. 往下滑找到 **「指令碼屬性」 (Script Properties)**，點擊「新增指令碼屬性」。
+4. 屬性 (Property) 欄位請精準填入：`OSM_API_KEY`
+5. 值 (Value) 欄位請貼上您剛剛複製的 Access Token，並點擊儲存。
+
+### 步驟 3：設定自動排程 (Trigger)
 1. 在 Apps Script 編輯器中，點擊左側邊欄的 **「觸發條件 (Triggers)」** （鬧鐘圖示）。
 2. 點擊右下角的 **「新增觸發條件 (Add Trigger)」**。
 3. 依照以下設定：
@@ -89,7 +99,7 @@
 4. 點擊 **「儲存」**。系統可能會要求您登入 Google 帳號並授權，請點擊「進階 -> 繼續前往」完成授權。
 
 > **💡 運作方式：**
-> 設定完成後，您未來新增餐廳時只需把 `Coordinates` 欄位留空。每小時系統會在背景檢查一次表單，如果發現有填寫 `Restaurant` 但沒有座標的列，就會自動呼叫地圖 API 將座標填上！您也可以隨時在 Apps Script 介面中手動點擊「執行 (Run)」來立刻補齊座標。
+> 設定完成後，您未來新增餐廳時只需把 `Coordinates` 與 `Address` 欄位留空。每小時系統會在背景檢查一次表單，如果發現有填寫 `Restaurant` 但沒有座標的列，就會自動呼叫地圖 API 將座標與標準地址填上！您也可以隨時在 Apps Script 介面中手動點擊「執行 (Run)」來立刻補齊。
 
 ---
 
