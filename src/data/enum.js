@@ -6,6 +6,8 @@ export const locationMapping = {
     "ZhongshanElementary": "中山國小站",
     "Zhongyuan": "中原街",
     "Jilin": "吉林路",
+    "Zhongyuan St.": "中原街",
+    "Jilin Rd.": "吉林路",
     "near": "附近"
 };
 

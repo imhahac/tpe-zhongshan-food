@@ -18,6 +18,7 @@ export default function App() {
   const [selectedTags, setSelectedTags] = useState([]);
   const [currentCoord, setCurrentCoord] = useState(null);
   const [activeMarker, setActiveMarker] = useState(null);
+  const [activeRestaurant, setActiveRestaurant] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
 
   const { genres, locations } = useMemo(() => {
@@ -85,6 +86,7 @@ export default function App() {
   const handleCardClick = (row) => {
     const pos = getPosition(row.Coordinates);
     setActiveMarker(pos);
+    setActiveRestaurant(row.Restaurant);
   };
 
   const handleScroll = (e) => {
@@ -112,6 +114,7 @@ export default function App() {
         <Map 
           currentCoord={currentCoord} 
           activeMarker={activeMarker}
+          activeRestaurant={activeRestaurant}
           markers={filteredData.map(r => ({
             position: getPosition(r.Coordinates),
             name: r.Restaurant

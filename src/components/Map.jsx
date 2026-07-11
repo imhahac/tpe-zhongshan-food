@@ -22,7 +22,16 @@ function MapController({ center, zoom }) {
   return null;
 }
 
-export default function Map({ currentCoord, markers, activeMarker }) {
+const activeIcon = new L.Icon({
+  iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
+
+export default function Map({ currentCoord, markers, activeMarker, activeRestaurant }) {
   const mapCenter = activeMarker || currentCoord || defaultCoordination;
 
   const userIcon = new L.Icon({
@@ -44,8 +53,13 @@ export default function Map({ currentCoord, markers, activeMarker }) {
         </Marker>
       )}
 
-      {markers.map((m, idx) => (
-        <Marker key={idx} position={m.position}>
+      {markers.map((m) => (
+        <Marker 
+          key={m.name} 
+          position={m.position}
+          icon={m.name === activeRestaurant ? activeIcon : undefined}
+          zIndexOffset={m.name === activeRestaurant ? 1000 : 0}
+        >
           <Popup>{m.name}</Popup>
         </Marker>
       ))}
