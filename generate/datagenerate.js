@@ -27,7 +27,10 @@ async function generateData() {
         }
 
         Readable.from([csvText])
-            .pipe(csv())
+            .pipe(csv({
+                mapHeaders: ({ header }) => header.trim(),
+                mapValues: ({ value }) => typeof value === 'string' ? value.trim() : value
+            }))
             .on('data', (row) => {
                 data.push(row);
             })
