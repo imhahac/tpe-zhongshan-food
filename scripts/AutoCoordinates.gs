@@ -125,7 +125,7 @@ function getCoordinates(restaurantName) {
 
 function getFromLocationIQ(restaurantName, apiKey) {
   const query = encodeURIComponent(`${restaurantName} 中山區 台北市`);
-  const url = `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${query}&format=json&limit=1`;
+  const url = `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${query}&format=json&limit=1&accept-language=zh-TW`;
   const options = { method: "GET", muteHttpExceptions: true };
   
   try {
@@ -136,7 +136,7 @@ function getFromLocationIQ(restaurantName, apiKey) {
         return {
           lat: parseFloat(data[0].lat).toFixed(6),
           lon: parseFloat(data[0].lon).toFixed(6),
-          address: data[0].display_name
+          address: cleanAddress(data[0].display_name)
         };
       }
       return { error: "LocationIQ 找不到該地點" };
@@ -150,19 +150,41 @@ function getFromLocationIQ(restaurantName, apiKey) {
 function getFromGoogleGeocoder(restaurantName) {
   try {
     const query = `${restaurantName} 中山區 台北市`;
-    // 使用 Apps Script 原生的 Maps 服務
-    const response = Maps.newGeocoder().geocode(query);
+    // 使用 Apps Script 原生的 Maps 服務，強制指定繁體中文
+    const response = Maps.newGeocoder().setLanguage('zh-TW').geocode(query);
     
     if (response.status === 'OK' && response.results.length > 0) {
       const result = response.results[0];
       return {
         lat: result.geometry.location.lat.toFixed(6),
         lon: result.geometry.location.lng.toFixed(6),
-        address: result.formatted_address
+        address: cleanAddress(result.formatted_address)
       };
     }
     return { error: `Google API 失敗狀態: ${response.status}` };
   } catch (e) {
     return { error: `Google Geocoder 異常: ${e.message}` };
   }
+}
+
+/**
+ * 清理地址：移除郵遞區號、台灣字樣，讓地址更簡短乾淨
+ */
+function cleanAddress(addr) {
+  if (!addr) return "";
+  let res = addr.toString();
+  
+  // 1. 移除 Google 格式開頭的郵遞區號 (例如: "10491台灣...")
+  res = res.replace(/^\d{3,6}/, '');
+  
+  // 2. 移除 "台灣" 或 "臺灣" 字眼
+  res = res.replace(/臺灣|台灣/g, '');
+  
+  // 3. 針對 LocationIQ 逗號格式，移除獨立的區號 (例如 ", 10491,")
+  res = res.replace(/,\s*\d{3,6}(?=\s*,|\s*$)/g, '');
+  
+  // 4. 清除前後多餘的逗號與空白
+  res = res.replace(/^[,\s]+|[,\s]+$/g, '');
+  
+  return res;
 }

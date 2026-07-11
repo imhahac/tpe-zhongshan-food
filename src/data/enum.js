@@ -4,6 +4,8 @@ export const locationMapping = {
     "Qingguang": "晴光市場",
     "MinquanWest": "民權西路站",
     "ZhongshanElementary": "中山國小站",
+    "Zhongyuan": "中原街",
+    "Jilin": "吉林路",
     "near": "附近"
 };
 
@@ -13,6 +15,8 @@ export const locationMapping_en = {
     "Qingguang": "Qingguang Market",
     "MinquanWest": "MRT Minquan W. Rd.",
     "ZhongshanElementary": "MRT Zhongshan Elem. Sch.",
+    "Zhongyuan": "Zhongyuan St.",
+    "Jilin": "Jilin Rd.",
     "near": "Nearby"
 };
 

@@ -50,7 +50,7 @@
 | --- | --- | --- |
 | **`Restaurant`** | 餐廳名稱（將直接顯示於畫面上） | `晴光意麵` |
 | **`Address`** | 餐廳地址。若留空，排程腳本會自動查詢並填上 | `台北市中山區農安街...` |
-| **`Location`** | 餐廳區域。必須填入系統定義的英文 Key（例如：`Qingguang` = 晴光市場, `MinquanWest` = 民權西路站, `ZhongshanElementary` = 中山國小站） | `Qingguang` |
+| **`Location`** | 餐廳區域。必須填入系統定義的英文 Key（例如：`Qingguang` = 晴光市場, `MinquanWest` = 民權西路站, `ZhongshanElementary` = 中山國小站, `Zhongyuan` = 中原街, `Jilin` = 吉林路） | `Qingguang` |
 | **`Genre`** | 餐廳類別。必須填入系統定義的英文 Key（例如：`Bento`, `Japanese`, `Noodles`, `Dessert` 等） | `Noodles` |
 | **`Price`** | 價格區間，填入數字。畫面上會轉化為金幣數量 🪙 | `2` |
 | **`Coordinates`** | Google Maps 經緯度，以逗號分隔。如果留空則會預設指到民權西路站 | `25.0645, 121.5234` |
