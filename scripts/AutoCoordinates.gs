@@ -50,7 +50,7 @@ function fetchCoordinates() {
       Logger.log(`正在搜尋: ${restaurantName}`);
       processedCount++;
       
-      const result = getCoordinatesFromOSM(restaurantName);
+      const result = getCoordinates(restaurantName);
       
       if (result && result.lat) {
         // 寫入座標
@@ -97,23 +97,35 @@ function fetchCoordinates() {
 }
 
 /**
- * 呼叫 OpenStreetMap API 取得經緯度與地址
+ * 雙軌備援機制：取得經緯度與地址
+ * Primary: LocationIQ (OpenStreetMap)
+ * Secondary: Google Apps Script 內建地圖服務 (免 Key, 高可用)
  */
-function getCoordinatesFromOSM(restaurantName) {
+function getCoordinates(restaurantName) {
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const apiKey = scriptProperties.getProperty('OSM_API_KEY');
+  
+  // Track 1: 如果有設定 API Key，優先使用 LocationIQ (OSM)
+  if (apiKey) {
+    Logger.log(`[Track 1] 嘗試使用 LocationIQ API (OSM) 搜尋: ${restaurantName}`);
+    const osmResult = getFromLocationIQ(restaurantName, apiKey);
+    if (!osmResult.error) {
+      return osmResult;
+    }
+    Logger.log(`[Track 1 失敗] ${osmResult.error}，將自動切換至 Track 2 備援機制...`);
+  } else {
+    Logger.log(`[Track 1 跳過] 未設定 OSM_API_KEY，直接啟用 Track 2 備援機制。`);
+  }
+
+  // Track 2: 備援機制，使用 Apps Script 內建的 Google Geocoder (完全免費、免 Key、幾乎不會 429)
+  Logger.log(`[Track 2] 嘗試使用 Google Native Geocoder 搜尋: ${restaurantName}`);
+  return getFromGoogleGeocoder(restaurantName);
+}
+
+function getFromLocationIQ(restaurantName, apiKey) {
   const query = encodeURIComponent(`${restaurantName} 中山區 台北市`);
-  const url = `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`;
-  
-  // 盲區修正 4：OpenStreetMap 官方強烈建議 User-Agent 必須提供聯絡信箱。
-  // 若只使用通用的 Agent 名稱，可能會被官方防火牆無預警永久封鎖。
-  const userEmail = Session.getActiveUser().getEmail();
-  
-  const options = {
-    method: "GET",
-    headers: {
-      "User-Agent": `ZhongshanFoodPicker-AutoScript/1.0 (${userEmail})`
-    },
-    muteHttpExceptions: true
-  };
+  const url = `https://us1.locationiq.com/v1/search.php?key=${apiKey}&q=${query}&format=json&limit=1`;
+  const options = { method: "GET", muteHttpExceptions: true };
   
   try {
     const response = UrlFetchApp.fetch(url, options);
@@ -125,13 +137,31 @@ function getCoordinatesFromOSM(restaurantName) {
           lon: parseFloat(data[0].lon).toFixed(6),
           address: data[0].display_name
         };
-      } else {
-         return { error: "找不到此餐廳的地址座標" };
       }
-    } else {
-      return { error: `API 請求失敗 HTTP ${response.getResponseCode()}` };
+      return { error: "LocationIQ 找不到該地點" };
     }
+    return { error: `LocationIQ HTTP ${response.getResponseCode()}` };
   } catch (e) {
-    return { error: `發生例外錯誤: ${e.message}` };
+    return { error: `LocationIQ 異常: ${e.message}` };
+  }
+}
+
+function getFromGoogleGeocoder(restaurantName) {
+  try {
+    const query = `${restaurantName} 中山區 台北市`;
+    // 使用 Apps Script 原生的 Maps 服務
+    const response = Maps.newGeocoder().geocode(query);
+    
+    if (response.status === 'OK' && response.results.length > 0) {
+      const result = response.results[0];
+      return {
+        lat: result.geometry.location.lat.toFixed(6),
+        lon: result.geometry.location.lng.toFixed(6),
+        address: result.formatted_address
+      };
+    }
+    return { error: `Google API 失敗狀態: ${response.status}` };
+  } catch (e) {
+    return { error: `Google Geocoder 異常: ${e.message}` };
   }
 }
