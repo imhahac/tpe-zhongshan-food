@@ -39,6 +39,8 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     iconSize: [32, 40],
   });
 
+  const defaultIcon = new L.Icon.Default();
+
   return (
     <MapContainer center={mapCenter} zoom={16} scrollWheelZoom={true} className="leaflet-container">
       <TileLayer
@@ -53,11 +55,11 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
         </Marker>
       )}
 
-      {markers.map((m) => (
+      {markers.map((m, idx) => (
         <Marker 
-          key={m.name} 
+          key={`${m.name}-${idx}`} 
           position={m.position}
-          icon={m.name === activeRestaurant ? activeIcon : undefined}
+          icon={m.name === activeRestaurant ? activeIcon : defaultIcon}
           zIndexOffset={m.name === activeRestaurant ? 1000 : 0}
         >
           <Popup>{m.name}</Popup>
