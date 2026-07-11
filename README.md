@@ -9,11 +9,14 @@
 ### 1. 🍽️ 餐廳自動推薦與篩選
 可以根據「餐廳類別（中式、日式、速食...）」、「區域位置（晴光市場、捷運民權西路站...）」進行多重篩選。還支援「熱門推薦」、「一個人吃」、「多人聚餐」等特色標籤過濾。
 
-### 2. 🗺️ 地圖互動整合
-內建 **Leaflet** 地圖，會根據您過濾後的結果自動在地圖上標記餐廳位置。同時支援取得裝置的 GPS 定位，顯示出離您最近的餐廳，並提供 Google Maps 連結直接導航。
+### 2. 🎲 幫我選 (Roulette Picker)
+選擇困難症救星！透過專屬按鈕啟動跑馬燈動畫，系統會從篩選結果中為您隨機抽出「唯一一間」餐廳，並自動聚焦地圖，完美解決「不知道吃什麼」的世紀難題。
 
-### 3. 🔄 自動化 Google Sheets 串接 (免資料庫)
-所有的餐廳資料皆統一存放於公開的 Google Sheets 表單中。前端透過 **GitHub Actions**，在建置 (Build) 期間自動抓取最新的 CSV 資料打包成靜態網頁。維護者只需更新 Excel/Google Sheets 表單，系統會透過排程自動同步更新，完全無需維護後端資料庫！
+### 3. 🗺️ 地圖互動與步行導航
+內建 **Leaflet** 地圖，自動標記過濾後的餐廳。系統能讀取裝置 GPS 定位，在餐廳卡片上動態計算並顯示「精確直線距離（公尺）」，點擊卡片更可一鍵啟用 Google Maps **步行路線導航**。
+
+### 4. 🔄 自動化 Google Sheets 串接 (免資料庫)
+所有的餐廳資料皆統一存放於公開的 Google Sheets 表單中。前端透過 **GitHub Actions**，在建置期間自動打包成靜態網頁。同時支援串接 **Google Places API**，自動為您抓取店家的星級評價、電話與招牌照片！
 
 ---
 
@@ -60,6 +63,9 @@
 | **`Dating`** | (標籤) 是否適合約會。是請填大寫 `O`，否則留白 | |
 | **`FastServe`** | (標籤) 是否快速上菜。是請填大寫 `O`，否則留白 | `O` |
 | **`SlowEat`** | (標籤) 是否適合慢慢吃。是請填大寫 `O`，否則留白 | |
+| **`Rating`** | (進階) Google 評分。若掛載 Places API，排程會自動抓取 | `4.5` |
+| **`Phone`** | (進階) 餐廳電話。若掛載 Places API，排程會自動抓取 | `02-12345678` |
+| **`PhotoURL`** | (進階) 照片網址。若掛載 Places API，排程會自動抓取 | `https://...` |
 
 > **⚠️ 注意事項：** 
 > 1. 本專案支援 **「全自動化動態字典」 (No-Code Mappings)**！只要您在 Google Sheets 建立一個字典分頁（欄位依序為 `Location`, `locationMapping`, `Genre`, `genreMapping`），並將其 GID 填入 GitHub Variables `MAPPING_GID` 中，系統打包時就會自動產生下拉選單，完全無需修改前端程式碼！
@@ -67,11 +73,12 @@
 
 ---
 
-## 🤖 自動化：雙軌備援機制抓取座標與地址
+## 🤖 自動化：商業資訊抓取與多軌備援座標系統
 
-為了減輕手動查詢座標的負擔，本專案提供了一支內建「雙軌備援系統」的 **Google Apps Script**。您只需填寫餐廳名稱，系統便會在背景自動補齊經緯度與官方地址！
-- **Track 1 (主線路)**：LocationIQ (基於 OpenStreetMap 的專業地圖 API，需免費申請 Key)。
-- **Track 2 (備援線路)**：Google Apps Script 內建地圖服務 (免 Key，高可用性)。若 Track 1 失敗或未設定，系統會自動無縫切換至此備援機制。
+為了減輕手動維護的負擔，本專案提供了一支強大的 **Google Apps Script**。您只需填寫餐廳名稱，系統便會在背景自動幫您補齊所有缺漏的資訊！
+- **Track 0 (頂級線路)**：Google Places API (可抓取精確座標、地址、星級評價、電話、照片。需設定付費 Key)。
+- **Track 1 (備援線路)**：LocationIQ (基於 OpenStreetMap 的專業地圖 API。僅抓取座標與地址，需免費申請 Key)。
+- **Track 2 (終極備援)**：Google Apps Script 內建地圖服務 (完全免費免 Key。僅抓取座標與地址)。若前兩者未設定或失敗，系統會無縫切換至此。
 
 ### 步驟 1：匯入腳本
 1. 開啟您的 Google Sheets 表單。
@@ -80,13 +87,15 @@
 4. 打開本專案原始碼中的 [`scripts/AutoCoordinates.gs`](file:///Users/hahachou/git_repo/github/tpe-zhongshan-food/scripts/AutoCoordinates.gs) 檔案，將裡面的所有內容**複製並貼上**到腳本編輯器中。
 5. 點擊上方的 **「儲存」** 圖示（或按 `Ctrl+S` / `Cmd+S`）。
 
-### 步驟 2：申請並設定 LocationIQ API Key (建議)
-雖然系統內建 Google 備援機制，但為了獲取最準確的開源圖資，建議免費申請 LocationIQ API Key：
-1. 前往 [LocationIQ 官網](https://locationiq.com/) 註冊免費帳號，並在後台複製您的 **Access Token**。
-2. 回到 Apps Script 編輯器，點擊左側面板的 **「專案設定」 (齒輪圖示 ⚙️)**。
-3. 往下滑找到 **「指令碼屬性」 (Script Properties)**，點擊「新增指令碼屬性」。
-4. 屬性 (Property) 欄位請精準填入：`OSM_API_KEY`
-5. 值 (Value) 欄位請貼上您剛剛複製的 Access Token，並點擊儲存。
+### 步驟 2：設定 API Key (賦予腳本超能力)
+為了獲取最準確的資料與照片，強烈建議設定以下屬性（於 Apps Script 編輯器左側面板的 **「專案設定」 ⚙️ -> 指令碼屬性** 中新增）：
+1. **Google Places API Key (取得評價與照片)**：
+   - 屬性：`GOOGLE_PLACES_API_KEY`
+   - 值：您的 Google Cloud API Key (需啟用 Places API)。
+2. **LocationIQ API Key (免費精確座標備援)**：
+   - 前往 [LocationIQ 官網](https://locationiq.com/) 註冊免費帳號取得 Token。
+   - 屬性：`OSM_API_KEY`
+   - 值：您的 Access Token。
 
 ### 步驟 3：設定自動排程 (Trigger)
 1. 在 Apps Script 編輯器中，點擊左側邊欄的 **「觸發條件 (Triggers)」** （鬧鐘圖示）。
