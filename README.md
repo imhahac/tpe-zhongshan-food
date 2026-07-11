@@ -49,6 +49,7 @@
 | 欄位名稱 (Header) | 說明與填寫規範 | 範例 |
 | --- | --- | --- |
 | **`Restaurant`** | 餐廳名稱（將直接顯示於畫面上） | `晴光意麵` |
+| **`Address`** | 餐廳地址。若留空，排程腳本會自動查詢並填上 | `台北市中山區農安街...` |
 | **`Location`** | 餐廳區域。必須填入系統定義的英文 Key（例如：`Qingguang` = 晴光市場, `MinquanWest` = 民權西路站, `ZhongshanElementary` = 中山國小站） | `Qingguang` |
 | **`Genre`** | 餐廳類別。必須填入系統定義的英文 Key（例如：`Bento`, `Japanese`, `Noodles`, `Dessert` 等） | `Noodles` |
 | **`Price`** | 價格區間，填入數字。畫面上會轉化為金幣數量 🪙 | `2` |
@@ -62,6 +63,33 @@
 > **⚠️ 注意事項：** 
 > 1. `Location` 與 `Genre` 支援的完整英文 Key 列表請參考原始碼 `src/data/enum.js` 中的設定。
 > 2. `HotPick` (熱門推薦) 標籤是由點擊率統計自動產生的，不需要（也不能）在表單中手動填寫。
+
+---
+
+## 🤖 自動化：填寫餐廳名稱，自動抓取座標
+
+為了減輕手動查詢座標的負擔，本專案提供了一支基於 OpenStreetMap API 的 **Google Apps Script**。您只需填寫餐廳名稱，系統便會在背景自動補齊座標！
+
+### 步驟 1：匯入腳本
+1. 開啟您的 Google Sheets 表單。
+2. 點選頂部選單的 **「擴充功能 (Extensions)」 -> 「Apps Script」**。
+3. 系統會開啟一個新的腳本編輯器。請將編輯器內預設的程式碼全數刪除。
+4. 打開本專案原始碼中的 [`scripts/AutoCoordinates.gs`](file:///Users/hahachou/git_repo/github/tpe-zhongshan-food/scripts/AutoCoordinates.gs) 檔案，將裡面的所有內容**複製並貼上**到腳本編輯器中。
+5. 點擊上方的 **「儲存」** 圖示（或按 `Ctrl+S` / `Cmd+S`）。
+
+### 步驟 2：設定自動排程 (Trigger)
+1. 在 Apps Script 編輯器中，點擊左側邊欄的 **「觸發條件 (Triggers)」** （鬧鐘圖示）。
+2. 點擊右下角的 **「新增觸發條件 (Add Trigger)」**。
+3. 依照以下設定：
+   - 選擇要執行的功能：`fetchCoordinates`
+   - 選擇您應執行的部署作業：`Head`
+   - 選取事件來源：`時間驅動 (Time-driven)`
+   - 選取時間型觸發條件類型：`小時計時器 (Hour timer)`
+   - 選取時間間隔：`每小時 (Every hour)`
+4. 點擊 **「儲存」**。系統可能會要求您登入 Google 帳號並授權，請點擊「進階 -> 繼續前往」完成授權。
+
+> **💡 運作方式：**
+> 設定完成後，您未來新增餐廳時只需把 `Coordinates` 欄位留空。每小時系統會在背景檢查一次表單，如果發現有填寫 `Restaurant` 但沒有座標的列，就會自動呼叫地圖 API 將座標填上！您也可以隨時在 Apps Script 介面中手動點擊「執行 (Run)」來立刻補齊座標。
 
 ---
 

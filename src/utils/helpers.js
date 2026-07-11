@@ -3,13 +3,18 @@ export const defaultCoordination = [25.0628, 121.5193]; // Minquan West Rd Stati
 export const NEAR = 0.2; // km
 
 export function apiFetch(endpoint, bodyObj, method="POST") {
-  return fetch(`${BACKEND_BASE_URL}${endpoint}`, {
+  const options = {
     method: method,
     headers: {
       "Content-Type": "application/json"
-    },
-    body: JSON.stringify(bodyObj)
-  }).then(res => {
+    }
+  };
+
+  if (method !== 'GET' && method !== 'HEAD') {
+    options.body = JSON.stringify(bodyObj);
+  }
+
+  return fetch(`${BACKEND_BASE_URL}${endpoint}`, options).then(res => {
     if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
     return res;
   }).catch(err => console.warn("Fetch Error:", err));
@@ -32,7 +37,7 @@ export function inRange(coord1, coord2, range = 0.5) {
 
 export function getPosition(coordinates) {
   if (!coordinates) return defaultCoordination;
-  let coo = coordinates.split(',');
+  let coo = String(coordinates).split(',');
   let ret = [parseFloat(coo[0]), parseFloat(coo[1])];
   if (isNaN(ret[0]) || isNaN(ret[1])) return defaultCoordination;
   return ret;

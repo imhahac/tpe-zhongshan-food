@@ -27,7 +27,7 @@ export default function Map({ currentCoord, markers, activeMarker }) {
   const mapCenter = activeMarker || currentCoord || defaultCoord;
 
   const userIcon = new L.Icon({
-    iconUrl: '/frontend/icon.png',
+    iconUrl: import.meta.env.BASE_URL + 'icon.png',
     iconSize: [32, 40],
   });
 
