@@ -10,7 +10,8 @@ export default function Filters({
   genre, setGenre,
   location, setLocation,
   genres, locations,
-  selectedTags, toggleTag, setSelectedTags
+  selectedTags, toggleTag, setSelectedTags,
+  showFavoritesOnly, setShowFavoritesOnly
 }) {
   return (
     <>
@@ -41,6 +42,12 @@ export default function Filters({
       </div>
 
       <div className="filters-div">
+        <button 
+          className={`filter-btn ${showFavoritesOnly ? 'active-filter' : ''}`}
+          onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+        >
+          ⭐ {lang === 'en' ? 'My Favorites' : '我的最愛'}
+        </button>
         {Object.entries(filterMapping).map(([tag, { chinese, emoji }]) => {
           const name = lang === 'en' && filterMapping_en[tag] ? filterMapping_en[tag].english : chinese;
           return (
@@ -53,7 +60,10 @@ export default function Filters({
             </button>
           );
         })}
-        <button className="filter-btn" onClick={() => setSelectedTags([])}>❌</button>
+        <button className="filter-btn" onClick={() => {
+          setSelectedTags([]);
+          setShowFavoritesOnly(false);
+        }}>❌</button>
       </div>
     </>
   );

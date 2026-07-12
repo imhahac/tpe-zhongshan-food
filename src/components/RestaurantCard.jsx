@@ -6,7 +6,7 @@ import {
 } from '../data/enum.js';
 import { getPosition, getDistance } from '../utils/helpers.js';
 
-export default function RestaurantCard({ row, lang, handleCardClick, hasTag, currentCoord }) {
+export default function RestaurantCard({ row, lang, handleCardClick, hasTag, currentCoord, isFavorite, toggleFavorite }) {
   const pos = getPosition(row.Coordinates);
   const encodedName = encodeURIComponent(row.Restaurant);
   
@@ -17,11 +17,20 @@ export default function RestaurantCard({ row, lang, handleCardClick, hasTag, cur
 
   return (
     <div id={`card-${row.Restaurant}`} className="row-card" onClick={() => handleCardClick(row)}>
-      <h3>
-        <a href={gMapsLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
-          {row.Restaurant}
-        </a>
-      </h3>
+      <div className="card-header">
+        <h3>
+          <a href={gMapsLink} target="_blank" rel="noreferrer" onClick={e => e.stopPropagation()}>
+            {row.Restaurant}
+          </a>
+        </h3>
+        <button 
+          className="favorite-btn" 
+          onClick={(e) => toggleFavorite(row.Restaurant, e)}
+          title={lang === 'en' ? 'Add to Favorites' : '加入我的最愛'}
+        >
+          {isFavorite ? '❤️' : '🤍'}
+        </button>
+      </div>
       {row.Rating && (
         <div className="card-rating">⭐ {row.Rating}</div>
       )}

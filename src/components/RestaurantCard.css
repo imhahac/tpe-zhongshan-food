@@ -63,6 +63,30 @@
   margin-bottom: 4px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.favorite-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.favorite-btn:hover {
+  transform: scale(1.1);
+}
+
+.favorite-btn:active {
+  transform: scale(0.9);
+}
+
 .card-hours {
   margin-bottom: 8px;
   font-size: 0.9rem;

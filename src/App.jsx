@@ -22,6 +22,16 @@ export default function App() {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [picking, setPicking] = useState(false);
   const [pickingName, setPickingName] = useState('');
+  
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const item = localStorage.getItem('favorites');
+      return item ? JSON.parse(item) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   const { genres, locations } = useMemo(() => {
     const g = new Set();
@@ -47,6 +57,19 @@ export default function App() {
       setCurrentCoord([pos.coords.latitude, pos.coords.longitude]);
     }, err => console.warn(err), { enableHighAccuracy: true });
     return () => navigator.geolocation.clearWatch(geoId);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem('favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = useCallback((restaurantName, e) => {
+    e.stopPropagation();
+    setFavorites(prev => 
+      prev.includes(restaurantName) 
+        ? prev.filter(n => n !== restaurantName) 
+        : [...prev, restaurantName]
+    );
   }, []);
 
   const toggleLang = () => setLang(l => l === 'en' ? 'zh' : 'en');
@@ -82,14 +105,46 @@ export default function App() {
       results = results.filter(r => selectedTags.every(t => hasTag(r, t)));
     }
 
-    return results;
-  }, [genre, location, currentCoord, selectedTags, hasTag]);
+    if (showFavoritesOnly) {
+      results = results.filter(r => favorites.includes(r.Restaurant));
+    }
 
-  const handleCardClick = (row) => {
+    return results;
+  }, [genre, location, currentCoord, selectedTags, hasTag, showFavoritesOnly, favorites]);
+
+  const handleCardClick = useCallback((row, updateHash = true) => {
     const pos = getPosition(row.Coordinates);
     setActiveMarker(pos);
     setActiveRestaurant(row.Restaurant);
-  };
+    if (updateHash) {
+      window.history.pushState(null, null, `#${encodeURIComponent(row.Restaurant)}`);
+    }
+  }, []);
+
+  useEffect(() => {
+    const handleHash = () => {
+      let hash = "";
+      try {
+        hash = decodeURIComponent(window.location.hash.substring(1));
+      } catch (e) {
+        console.warn("Invalid hash URI encoding");
+        return;
+      }
+      
+      if (hash) {
+        const target = rawData.find(r => r.Restaurant === hash);
+        if (target) {
+          handleCardClick(target, false);
+          setTimeout(() => {
+            document.getElementById(`card-${target.Restaurant}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }, 500);
+        }
+      }
+    };
+    handleHash();
+    window.addEventListener('hashchange', handleHash);
+    return () => window.removeEventListener('hashchange', handleHash);
+  }, [handleCardClick]);
 
   const pickRandom = () => {
     if (filteredData.length === 0) return;
@@ -155,6 +210,7 @@ export default function App() {
             location={location} setLocation={setLocation}
             genres={genres} locations={locations}
             selectedTags={selectedTags} toggleTag={toggleTag} setSelectedTags={setSelectedTags}
+            showFavoritesOnly={showFavoritesOnly} setShowFavoritesOnly={setShowFavoritesOnly}
           />
 
           <div style={{ textAlign: 'center', marginBottom: '10px' }}>
@@ -182,6 +238,8 @@ export default function App() {
                   handleCardClick={handleCardClick} 
                   hasTag={hasTag} 
                   currentCoord={currentCoord}
+                  isFavorite={favorites.includes(row.Restaurant)}
+                  toggleFavorite={toggleFavorite}
                 />
               ))
             )}
