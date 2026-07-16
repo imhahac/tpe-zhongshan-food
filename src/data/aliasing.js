@@ -4,8 +4,9 @@ export const aliasing = {
     "Japanese": ["Ramen"],
     "Noodles": ["Ramen"],
     "American": ["Steak", "FastFood"],
-    "Breakfast": ["BreakfastBrunch", "Light", "Cafe"],
-    "BreakfastBrunch": ["Light", "Cafe"],
-    "Light": ["Cafe"],
+    "Breakfast": ["BreakfastBrunch"],
+    "BreakfastBrunch": [],
+    "Bento": ["Healthy"],
+    "Light": ["Cafe", "Healthy"],
     "Exotic": ["SouthEastAsian", "Indian", "Korean", "French", "Italian"]
 }
