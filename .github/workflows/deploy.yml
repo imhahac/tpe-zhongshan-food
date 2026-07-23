@@ -46,6 +46,7 @@ jobs:
           MAPPING_GID: ${{ vars.MAPPING_GID || secrets.MAPPING_GID }}
           VITE_SHEET_ID: ${{ vars.SHEET_ID || secrets.SHEET_ID }}
           VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL || secrets.VITE_BACKEND_URL }}
+          VITE_GITHUB_REPO: ${{ github.repository }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v6
