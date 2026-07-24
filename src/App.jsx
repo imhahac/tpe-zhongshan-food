@@ -26,22 +26,25 @@ export default function App() {
   const [favorites, setFavorites] = useState(() => {
     try {
       const item = localStorage.getItem('favorites');
-      return item ? JSON.parse(item) : [];
+      const parsed = item ? JSON.parse(item) : [];
+      return Array.isArray(parsed) ? parsed : [];
     } catch {
       return [];
     }
   });
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
+  const safeRawData = useMemo(() => Array.isArray(rawData) ? rawData : [], []);
+
   const { genres, locations } = useMemo(() => {
     const g = new Set();
     const l = new Set();
-    rawData.forEach(r => {
-      if (r.Genre) g.add(r.Genre);
-      if (r.Location) l.add(r.Location);
+    safeRawData.forEach(r => {
+      if (r && r.Genre) g.add(r.Genre);
+      if (r && r.Location) l.add(r.Location);
     });
     return { genres: Array.from(g), locations: Array.from(l) };
-  }, []);
+  }, [safeRawData]);
 
   useEffect(() => {
     localStorage.setItem('lang', lang);
@@ -86,10 +89,11 @@ export default function App() {
 
   const filteredData = useMemo(() => {
     let results = [];
-    let aliasGenre = aliasing[genre] ? [genre, ...aliasing[genre]] : [genre];
+    let aliasGenre = aliasing && aliasing[genre] ? [genre, ...aliasing[genre]] : [genre];
     
     for (let queryGenre of aliasGenre) {
-      for (let row of rawData) {
+      for (let row of safeRawData) {
+        if (!row) continue;
         if (queryGenre !== row.Genre && queryGenre !== "All") continue;
         
         if (location === "near") {
@@ -106,13 +110,15 @@ export default function App() {
     }
 
     if (showFavoritesOnly) {
-      results = results.filter(r => favorites.includes(r.Restaurant));
+      const favs = Array.isArray(favorites) ? favorites : [];
+      results = results.filter(r => r && favs.includes(r.Restaurant));
     }
 
     return results;
-  }, [genre, location, currentCoord, selectedTags, hasTag, showFavoritesOnly, favorites]);
+  }, [genre, location, currentCoord, selectedTags, hasTag, showFavoritesOnly, favorites, safeRawData]);
 
   const handleCardClick = useCallback((row, updateHash = true) => {
+    if (!row) return;
     const pos = getPosition(row.Coordinates);
     setActiveMarker(pos);
     setActiveRestaurant(row.Restaurant);
@@ -132,7 +138,7 @@ export default function App() {
       }
       
       if (hash) {
-        const target = rawData.find(r => r.Restaurant === hash);
+        const target = safeRawData.find(r => r && r.Restaurant === hash);
         if (target) {
           handleCardClick(target, false);
           setTimeout(() => {
