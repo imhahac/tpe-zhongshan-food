@@ -68,7 +68,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     }
   }, [mapCenter]);
 
-  // 3. Update Restaurant Markers
+  // 3. Update Restaurant Markers with Option A Modern Badges & Pulse Rings
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -81,16 +81,13 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
       const isSelected = m.name === activeRestaurant;
       
       const el = document.createElement('div');
-      el.className = `map-marker-pin ${isSelected ? 'active-pin' : ''}`;
-      el.innerHTML = isSelected ? '📍' : '📌';
-      el.style.fontSize = isSelected ? '28px' : '20px';
-      el.style.cursor = 'pointer';
-      el.style.transition = 'transform 0.2s';
-      if (isSelected) {
-        el.style.zIndex = '1000';
-      }
+      el.className = `map-marker-badge ${isSelected ? 'active-badge' : ''}`;
+      el.innerHTML = `
+        ${isSelected ? '<div class="active-pulse-ring"></div>' : ''}
+        <span>${isSelected ? '🔥' : '🍽️'}</span>
+      `;
 
-      const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>${m.name}</strong>`);
+      const popup = new maplibregl.Popup({ offset: 20 }).setHTML(`<strong>${m.name}</strong>`);
 
       const marker = new maplibregl.Marker({ element: el })
         .setLngLat([m.position[1], m.position[0]])
@@ -105,7 +102,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     });
   }, [safeMarkers, activeRestaurant]);
 
-  // 4. Update User Position Marker
+  // 4. Update User Position Marker with Blue Radar Pulse
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -117,11 +114,13 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
 
     if (currentCoord && Array.isArray(currentCoord) && !isNaN(currentCoord[0]) && !isNaN(currentCoord[1])) {
       const el = document.createElement('div');
-      el.innerHTML = '🚶';
-      el.style.fontSize = '26px';
-      el.style.cursor = 'pointer';
+      el.className = 'user-location-container';
+      el.innerHTML = `
+        <div class="user-pulse-ring"></div>
+        <div class="user-location-dot"></div>
+      `;
 
-      const popup = new maplibregl.Popup({ offset: 25 }).setText('現在位置 / Current Position');
+      const popup = new maplibregl.Popup({ offset: 15 }).setText('現在位置 / Current Position');
 
       userMarkerRef.current = new maplibregl.Marker({ element: el })
         .setLngLat([currentCoord[1], currentCoord[0]])
@@ -131,6 +130,6 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
   }, [currentCoord]);
 
   return (
-    <div ref={mapContainerRef} className="map-container" style={{ width: '100%', height: '100%' }} />
+    <div ref={mapContainerRef} className="map-container" />
   );
 }
