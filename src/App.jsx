@@ -9,7 +9,7 @@ import Map from './components/Map';
 
 import rawData from './data/data.json';
 import { aliasing } from './data/aliasing.js';
-import { inRange, getPosition, NEAR } from './utils/helpers.js';
+import { inRange, getPosition, getDistance, NEAR } from './utils/helpers.js';
 
 export default function App() {
   const [lang, setLang] = useState(localStorage.getItem('lang') || 'zh');
