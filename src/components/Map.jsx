@@ -1,72 +1,23 @@
-import React, { useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
+import React, { useEffect, useRef, useMemo } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import './Map.css';
 import { defaultCoordination } from '../utils/helpers.js';
 
-// Resolve Leaflet module in both ESM and CJS bundle environments safely
-const leafletObj = (L && L.Icon) ? L : ((L && L.default && L.default.Icon) ? L.default : L);
-
-if (leafletObj && leafletObj.Icon && leafletObj.Icon.Default && leafletObj.Icon.Default.prototype) {
-  try {
-    delete leafletObj.Icon.Default.prototype._getIconUrl;
-    leafletObj.Icon.Default.mergeOptions({
-      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-    });
-  } catch (e) {
-    console.warn("Leaflet default icon options error:", e);
-  }
-}
-
-function MapController({ center, zoom }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center && Array.isArray(center) && !isNaN(center[0]) && !isNaN(center[1])) {
-      try {
-        map.flyTo(center, zoom, { duration: 0.5 });
-      } catch (e) {
-        console.warn("map.flyTo error:", e);
-      }
-    }
-  }, [center, zoom, map]);
-  return null;
-}
-
 export default function Map({ currentCoord, markers, activeMarker, activeRestaurant }) {
+  const mapContainerRef = useRef(null);
+  const mapRef = useRef(null);
+  const markersRef = useRef([]);
+  const userMarkerRef = useRef(null);
+
+  // Validate center: MapLibre expects [longitude, latitude]
   const mapCenter = useMemo(() => {
     const rawCenter = activeMarker || currentCoord || defaultCoordination;
     if (Array.isArray(rawCenter) && typeof rawCenter[0] === 'number' && typeof rawCenter[1] === 'number' && !isNaN(rawCenter[0]) && !isNaN(rawCenter[1])) {
-      return rawCenter;
+      return [rawCenter[1], rawCenter[0]]; // Convert [lat, lng] to [lng, lat]
     }
-    return defaultCoordination;
+    return [defaultCoordination[1], defaultCoordination[0]];
   }, [activeMarker, currentCoord]);
-
-  const activeIcon = useMemo(() => {
-    if (!leafletObj || !leafletObj.Icon) return null;
-    return new leafletObj.Icon({
-      iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-      shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
-    });
-  }, []);
-
-  const userIcon = useMemo(() => {
-    if (!leafletObj || !leafletObj.Icon) return null;
-    return new leafletObj.Icon({
-      iconUrl: (import.meta.env.BASE_URL || '/') + 'icon.png',
-      iconSize: [32, 40],
-    });
-  }, []);
-
-  const defaultIcon = useMemo(() => {
-    if (!leafletObj || !leafletObj.Icon || !leafletObj.Icon.Default) return null;
-    return new leafletObj.Icon.Default();
-  }, []);
 
   const safeMarkers = useMemo(() => {
     if (!Array.isArray(markers)) return [];
@@ -80,30 +31,106 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     );
   }, [markers]);
 
-  return (
-    <MapContainer center={mapCenter} zoom={16} scrollWheelZoom={true} className="leaflet-container">
-      <TileLayer
-        attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <MapController center={mapCenter} zoom={16} />
-      
-      {currentCoord && Array.isArray(currentCoord) && !isNaN(currentCoord[0]) && !isNaN(currentCoord[1]) && (
-        <Marker position={currentCoord} icon={userIcon || undefined}>
-          <Popup>現在位置 / Current Position</Popup>
-        </Marker>
-      )}
+  // 1. Initialize MapLibre GL Instance with OpenFreeMap Vector Tiles
+  useEffect(() => {
+    if (!mapContainerRef.current) return;
 
-      {safeMarkers.map((m, idx) => (
-        <Marker 
-          key={`${m.name}-${idx}`} 
-          position={m.position}
-          icon={m.name === activeRestaurant ? (activeIcon || undefined) : (defaultIcon || undefined)}
-          zIndexOffset={m.name === activeRestaurant ? 1000 : 0}
-        >
-          <Popup>{m.name}</Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: 'https://tiles.openfreemap.org/styles/bright',
+      center: mapCenter,
+      zoom: 16,
+      attributionControl: true,
+    });
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    mapRef.current = map;
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // 2. Fly to active location on change
+  useEffect(() => {
+    if (mapRef.current && mapCenter) {
+      try {
+        mapRef.current.flyTo({
+          center: mapCenter,
+          zoom: 16,
+          duration: 800,
+          essential: true,
+        });
+      } catch (e) {
+        console.warn("MapLibre flyTo error:", e);
+      }
+    }
+  }, [mapCenter]);
+
+  // 3. Update Restaurant Markers
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    // Clear previous restaurant markers
+    markersRef.current.forEach(m => m.remove());
+    markersRef.current = [];
+
+    safeMarkers.forEach(m => {
+      const isSelected = m.name === activeRestaurant;
+      
+      const el = document.createElement('div');
+      el.className = `map-marker-pin ${isSelected ? 'active-pin' : ''}`;
+      el.innerHTML = isSelected ? '📍' : '📌';
+      el.style.fontSize = isSelected ? '28px' : '20px';
+      el.style.cursor = 'pointer';
+      el.style.transition = 'transform 0.2s';
+      if (isSelected) {
+        el.style.zIndex = '1000';
+      }
+
+      const popup = new maplibregl.Popup({ offset: 25 }).setHTML(`<strong>${m.name}</strong>`);
+
+      const marker = new maplibregl.Marker({ element: el })
+        .setLngLat([m.position[1], m.position[0]])
+        .setPopup(popup)
+        .addTo(map);
+
+      if (isSelected) {
+        popup.addTo(map);
+      }
+
+      markersRef.current.push(marker);
+    });
+  }, [safeMarkers, activeRestaurant]);
+
+  // 4. Update User Position Marker
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+
+    if (userMarkerRef.current) {
+      userMarkerRef.current.remove();
+      userMarkerRef.current = null;
+    }
+
+    if (currentCoord && Array.isArray(currentCoord) && !isNaN(currentCoord[0]) && !isNaN(currentCoord[1])) {
+      const el = document.createElement('div');
+      el.innerHTML = '🚶';
+      el.style.fontSize = '26px';
+      el.style.cursor = 'pointer';
+
+      const popup = new maplibregl.Popup({ offset: 25 }).setText('現在位置 / Current Position');
+
+      userMarkerRef.current = new maplibregl.Marker({ element: el })
+        .setLngLat([currentCoord[1], currentCoord[0]])
+        .setPopup(popup)
+        .addTo(map);
+    }
+  }, [currentCoord]);
+
+  return (
+    <div ref={mapContainerRef} className="map-container" style={{ width: '100%', height: '100%' }} />
   );
 }

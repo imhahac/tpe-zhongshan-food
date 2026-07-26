@@ -33,6 +33,8 @@ export default function App() {
     }
   });
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('default');
+  const [pickHistory, setPickHistory] = useState([]);
 
   const safeRawData = useMemo(() => Array.isArray(rawData) ? rawData : [], []);
 
@@ -114,8 +116,19 @@ export default function App() {
       results = results.filter(r => r && favs.includes(r.Restaurant));
     }
 
+    if (sortBy === 'distance' && currentCoord) {
+      results.sort((a, b) => 
+        getDistance(currentCoord, getPosition(a.Coordinates)) - 
+        getDistance(currentCoord, getPosition(b.Coordinates))
+      );
+    } else if (sortBy === 'rating') {
+      results.sort((a, b) => (parseFloat(b.Rating) || 0) - (parseFloat(a.Rating) || 0));
+    } else if (sortBy === 'price') {
+      results.sort((a, b) => (parseInt(a.Price) || 0) - (parseInt(b.Price) || 0));
+    }
+
     return results;
-  }, [genre, location, currentCoord, selectedTags, hasTag, showFavoritesOnly, favorites, safeRawData]);
+  }, [genre, location, currentCoord, selectedTags, hasTag, showFavoritesOnly, favorites, sortBy, safeRawData]);
 
   const handleCardClick = useCallback((row, updateHash = true) => {
     if (!row) return;
@@ -165,6 +178,7 @@ export default function App() {
         clearInterval(interval);
         const finalChoice = filteredData[randIndex];
         setPicking(false);
+        setPickHistory(prev => [finalChoice.Restaurant, ...prev.filter(n => n !== finalChoice.Restaurant)].slice(0, 3));
         handleCardClick(finalChoice);
         setTimeout(() => {
           document.getElementById(`card-${finalChoice.Restaurant}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -217,6 +231,12 @@ export default function App() {
             genres={genres} locations={locations}
             selectedTags={selectedTags} toggleTag={toggleTag} setSelectedTags={setSelectedTags}
             showFavoritesOnly={showFavoritesOnly} setShowFavoritesOnly={setShowFavoritesOnly}
+            sortBy={sortBy} setSortBy={setSortBy}
+            totalCount={safeRawData.length}
+            filteredCount={filteredData.length}
+            pickHistory={pickHistory}
+            handleCardClick={handleCardClick}
+            safeRawData={safeRawData}
           />
 
           <div style={{ textAlign: 'center', marginBottom: '10px' }}>

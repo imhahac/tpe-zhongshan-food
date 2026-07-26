@@ -60,6 +60,26 @@ export default function RestaurantCard({ row, lang, handleCardClick, hasTag, cur
           <pre>{row.OpeningHours}</pre>
         </details>
       )}
+      <div className="card-actions-row">
+        <a 
+          href={`https://www.google.com/search?q=${encodedName}+${encodeURIComponent(lang === 'en' ? 'review' : '食記')}`} 
+          target="_blank" 
+          rel="noreferrer" 
+          className="card-action-btn"
+          onClick={e => e.stopPropagation()}
+        >
+          📖 {lang === 'en' ? 'Reviews' : '食記'}
+        </a>
+        <a 
+          href={`https://www.google.com/search?q=${encodedName}+${encodeURIComponent('foodpanda ubereats 外送')}`} 
+          target="_blank" 
+          rel="noreferrer" 
+          className="card-action-btn"
+          onClick={e => e.stopPropagation()}
+        >
+          🛵 {lang === 'en' ? 'Delivery' : '外送'}
+        </a>
+      </div>
       <div>
         {Object.keys(filterMapping).map(tag => {
           if (hasTag(row, tag)) {

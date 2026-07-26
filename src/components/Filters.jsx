@@ -11,7 +11,10 @@ export default function Filters({
   location, setLocation,
   genres, locations,
   selectedTags, toggleTag, setSelectedTags,
-  showFavoritesOnly, setShowFavoritesOnly
+  showFavoritesOnly, setShowFavoritesOnly,
+  sortBy, setSortBy,
+  totalCount, filteredCount,
+  pickHistory, handleCardClick, safeRawData
 }) {
   return (
     <>
@@ -39,6 +42,32 @@ export default function Filters({
             ))}
           </select>
         </div>
+        <div className="input-group">
+          <label>{lang === 'en' ? 'Sort By:' : '排序方式：'}</label>
+          <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+            <option value="default">{lang === 'en' ? 'Default' : '預設順序'}</option>
+            <option value="distance">{lang === 'en' ? '🚶 Nearest Distance' : '🚶 距離最近'}</option>
+            <option value="rating">{lang === 'en' ? '⭐ Highest Rating' : '⭐ 評價最高'}</option>
+            <option value="price">{lang === 'en' ? '🪙 Lowest Price' : '🪙 價格由低到高'}</option>
+          </select>
+        </div>
+      </div>
+
+      <div className="filter-stats-bar">
+        <span className="count-badge">
+          {lang === 'en' ? `Showing ${filteredCount} / ${totalCount}` : `顯示中：${filteredCount} / ${totalCount} 間`}
+        </span>
+        {(genre !== 'All' || location !== 'All' || selectedTags.length > 0 || showFavoritesOnly || sortBy !== 'default') && (
+          <button className="reset-link-btn" onClick={() => {
+            setGenre('All');
+            setLocation('All');
+            setSelectedTags([]);
+            setShowFavoritesOnly(false);
+            setSortBy('default');
+          }}>
+            {lang === 'en' ? 'Reset All Filters' : '↺ 重置所有篩選'}
+          </button>
+        )}
       </div>
 
       <div className="filters-div">
@@ -65,6 +94,27 @@ export default function Filters({
           setShowFavoritesOnly(false);
         }}>❌</button>
       </div>
+
+      {pickHistory && pickHistory.length > 0 && (
+        <div className="pick-history-bar">
+          <span className="history-label">{lang === 'en' ? 'Recent Picks:' : '最近抽中：'}</span>
+          {pickHistory.map((name, i) => (
+            <button 
+              key={`${name}-${i}`} 
+              className="history-pill"
+              onClick={() => {
+                const target = safeRawData.find(r => r && r.Restaurant === name);
+                if (target && handleCardClick) {
+                  handleCardClick(target);
+                  document.getElementById(`card-${target.Restaurant}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }}
+            >
+              🎯 {name}
+            </button>
+          ))}
+        </div>
+      )}
     </>
   );
 }
