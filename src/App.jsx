@@ -206,6 +206,14 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleWinScroll);
   }, []);
 
+  const mapMarkers = useMemo(() => {
+    return filteredData.map(r => ({
+      position: getPosition(r.Coordinates),
+      name: r.Restaurant,
+      row: r
+    }));
+  }, [filteredData]);
+
   return (
     <div className="app-container">
       <div className="map-layer">
@@ -213,10 +221,8 @@ export default function App() {
           currentCoord={currentCoord} 
           activeMarker={activeMarker}
           activeRestaurant={activeRestaurant}
-          markers={filteredData.map(r => ({
-            position: getPosition(r.Coordinates),
-            name: r.Restaurant
-          }))} 
+          handleCardClick={handleCardClick}
+          markers={mapMarkers} 
         />
       </div>
 

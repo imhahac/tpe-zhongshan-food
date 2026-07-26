@@ -4,7 +4,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import './Map.css';
 import { defaultCoordination } from '../utils/helpers.js';
 
-export default function Map({ currentCoord, markers, activeMarker, activeRestaurant }) {
+export default function Map({ currentCoord, markers, activeMarker, activeRestaurant, handleCardClick }) {
   const mapContainerRef = useRef(null);
   const mapRef = useRef(null);
   const markersRef = useRef([]);
@@ -31,7 +31,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     );
   }, [markers]);
 
-  // 1. Initialize MapLibre GL Instance with OpenFreeMap Vector Tiles
+  // 1. Initialize MapLibre GL Instance
   useEffect(() => {
     if (!mapContainerRef.current) return;
 
@@ -44,9 +44,23 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     });
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    
+    // Ensure map container dimensions match properly on load and resize
+    map.on('load', () => {
+      map.resize();
+    });
+
+    const handleResize = () => {
+      if (mapRef.current) {
+        mapRef.current.resize();
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
     mapRef.current = map;
 
     return () => {
+      window.removeEventListener('resize', handleResize);
       map.remove();
       mapRef.current = null;
     };
@@ -56,6 +70,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
   useEffect(() => {
     if (mapRef.current && mapCenter) {
       try {
+        mapRef.current.resize();
         mapRef.current.flyTo({
           center: mapCenter,
           zoom: 16,
@@ -68,7 +83,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
     }
   }, [mapCenter]);
 
-  // 3. Update Restaurant Markers with Option A Modern Badges & Pulse Rings
+  // 3. Update Restaurant Markers with click handlers
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -89,10 +104,19 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
 
       const popup = new maplibregl.Popup({ offset: 20 }).setHTML(`<strong>${m.name}</strong>`);
 
-      const marker = new maplibregl.Marker({ element: el })
+      const marker = new maplibregl.Marker({ element: el, anchor: 'center' })
         .setLngLat([m.position[1], m.position[0]])
         .setPopup(popup)
         .addTo(map);
+
+      // Marker click handler: select card and scroll to view
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (m.row && handleCardClick) {
+          handleCardClick(m.row);
+          document.getElementById(`card-${m.row.Restaurant}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
 
       if (isSelected) {
         popup.addTo(map);
@@ -100,9 +124,9 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
 
       markersRef.current.push(marker);
     });
-  }, [safeMarkers, activeRestaurant]);
+  }, [safeMarkers, activeRestaurant, handleCardClick]);
 
-  // 4. Update User Position Marker with Blue Radar Pulse
+  // 4. Update User Position Marker
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
@@ -122,7 +146,7 @@ export default function Map({ currentCoord, markers, activeMarker, activeRestaur
 
       const popup = new maplibregl.Popup({ offset: 15 }).setText('現在位置 / Current Position');
 
-      userMarkerRef.current = new maplibregl.Marker({ element: el })
+      userMarkerRef.current = new maplibregl.Marker({ element: el, anchor: 'center' })
         .setLngLat([currentCoord[1], currentCoord[0]])
         .setPopup(popup)
         .addTo(map);
